@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Carton Label Generator</title>
+<style>
+  :root{
+    --ink:#000;
+    --paper:#fafaf8;
+    --line:#d8d6cf;
+    --accent:#2f5d4f;
+    --accent-soft:#e7efec;
+    --muted:#6b6a63;
+    --flag:#b3392f;
+    --flag-soft:#f6e8e6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background:var(--paper);
+    color:#1c1c1a;
+  }
+  .app{
+    max-width:1220px;
+    margin:0 auto;
+    padding:28px 24px 80px;
+  }
+  h1{font-size:22px;margin:0 0 2px;letter-spacing:-0.01em;}
+  .sub{color:var(--muted);font-size:13.5px;margin:0 0 22px;}
+  .panel{border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:18px;background:#fff;}
+  .panel h2{font-size:13px;margin:0 0 12px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .panel h2 .n{background:var(--accent);color:#fff;width:19px;height:19px;border-radius:50%;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
+  .row-inline{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+  input[type=text], input[type=number]{font-family:inherit;font-size:13.5px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;width:100%;background:#fff;}
+  .field-sm{width:180px;}
+  .table-wrap{overflow-x:auto;margin-top:10px;}
+  table{width:100%;min-width:1240px;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;font-weight:600;font-size:11px;color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  td{padding:5px 5px;vertical-align:middle;}
+  td input[type=text], td input[type=number]{padding:6px 7px;font-size:12.5px;}
+  th,td{width:9.5%;}
+  .col-mixed{width:8%;text-align:center;}
+  .col-del{width:32px;text-align:center;}
+  td.col-mixed{text-align:center;}
+  input[type=checkbox]{width:16px;height:16px;cursor:pointer;}
+  .del-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:4px;}
+  .del-btn:hover{color:var(--flag);}
+  .add-row{margin-top:10px;font-size:12.5px;background:none;border:1px dashed var(--line);border-radius:6px;padding:7px 12px;cursor:pointer;color:var(--accent);}
+  .add-row:hover{background:var(--accent-soft);}
+  textarea{width:100%;min-height:70px;font-family:ui-monospace, Menlo, Consolas, monospace;font-size:12px;padding:9px;border:1px solid var(--line);border-radius:6px;resize:vertical;}
+  .paste-row{display:flex;gap:10px;align-items:flex-start;margin-top:10px;}
+  .paste-row textarea{flex:1;}
+  .btn{font-family:inherit;font-size:13px;font-weight:600;padding:8px 16px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;white-space:nowrap;}
+  .btn.secondary{background:#fff;color:var(--accent);}
+  .btn:hover{opacity:0.92;}
+  .actions{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;flex-wrap:wrap;gap:12px;}
+  .layout-toggle{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);}
+  .layout-toggle select{font-family:inherit;font-size:12.5px;padding:5px 7px;border-radius:6px;border:1px solid var(--line);}
+  .count{font-size:12.5px;color:var(--muted);}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  .note{font-size:11.5px;color:var(--muted);background:var(--accent-soft);border-radius:6px;padding:8px 10px;margin-bottom:18px;line-height:1.5;}
+
+  /* ---- label sheet ---- */
+  #labelSheet{display:flex;flex-wrap:wrap;gap:20px;overflow-x:auto;padding-bottom:10px;}
+  #labelSheet.sheet-1 .label-outer{width:100%;}
+
+  .label-outer{border:1px solid #000;padding:10px;background:#fff;flex:none;}
+  .label-inner{border:2.4px solid #000;display:flex;flex-direction:row;height:330px;}
+
+  .vtext{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;}
+
+  .strip{border:1.2px solid #000;display:flex;align-items:center;justify-content:center;padding:5px 2px;overflow:hidden;}
+  .strip + .strip{border-left:none;}
+
+  .strip-title{flex:0 0 28px;}
+  .strip-title .vtext{font-size:10px;font-weight:700;letter-spacing:0.03em;}
+
+  .strip-blank{flex:0 0 18px;}
+
+  .strip-label{flex:0 0 17px;background:#fafafa;}
+  .strip-label .vtext{font-size:8.5px;font-weight:600;letter-spacing:0.02em;color:#333;}
+
+  .strip-value{flex:0 0 32px;}
+  .strip-value .vtext{font-size:12px;font-weight:700;}
+
+  .strip-qtylabel{flex:0 0 20px;background:#fafafa;}
+  .strip-qtylabel .vtext{font-size:8.5px;font-weight:700;letter-spacing:0.02em;}
+
+  .strip-qtyvalue{flex:0 0 62px;border-width:2.4px;}
+  .strip-qtyvalue .vtext{font-size:24px;font-weight:800;}
+
+  .mixed-badge{
+    position:absolute;top:6px;right:6px;
+    background:var(--flag-soft);color:var(--flag);
+    font-size:9px;font-weight:800;letter-spacing:0.03em;
+    padding:2px 5px;border-radius:3px;border:1px solid var(--flag);
+    text-transform:uppercase;
+  }
+  .label-outer{position:relative;}
+
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 0;border:1px dashed var(--line);border-radius:8px;}
+
+  @media print{
+    body{background:#fff;}
+    .no-print{display:none !important;}
+    .app{padding:0;max-width:none;}
+    .panel{display:none;}
+    #labelSheet{gap:14px;}
+    .label-outer{break-inside:avoid;page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="no-print">
+    <h1>Carton Label Generator</h1>
+    <p class="sub">Interim tool for carton labelling — matches the outer carton label field set (5.2), auto-filled per carton.</p>
+
+    <div class="panel">
+      <h2><span class="n">1</span>Order defaults</h2>
+      <div class="row-inline">
+        <div class="field-sm">
+          <label for="defaultPO">Default PO Number</label>
+          <input type="text" id="defaultPO" placeholder="e.g. PO-40213">
+        </div>
+        <div class="field-sm">
+          <label for="defaultCustomer">Default Customer</label>
+          <input type="text" id="defaultCustomer" placeholder="e.g. Very">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="n">2</span>Order lines</h2>
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>PO Number</th>
+            <th>Customer</th>
+            <th>Style Ref</th>
+            <th>Description</th>
+            <th>Colour</th>
+            <th>Size</th>
+            <th>Supplier</th>
+            <th>Carton Unit Qty</th>
+            <th>No. of Cartons</th>
+            <th class="col-mixed">Mixed carton</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody id="rowsBody"></tbody>
+      </table>
+      </div>
+      <button class="add-row" id="addRowBtn">+ Add line</button>
+
+      <div class="paste-row">
+        <textarea id="pasteArea" placeholder="Or paste rows copied from Excel/NetSuite here — tab-separated: PO Number  Customer  Style Ref  Description  Colour  Size  Supplier  Carton Unit Qty  No. of Cartons  Mixed carton (Y/N)"></textarea>
+        <button class="btn secondary" id="pasteBtn">Add pasted rows</button>
+      </div>
+      <p class="hint">Each line = one Style Ref / Colour / Size on the order. "Carton Unit Qty" is the units in each carton, "No. of Cartons" is how many cartons that line fills — the tool prints that many labels automatically (Box 1 of 4 … 4 of 4).</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="generateBtn">Generate labels</button>
+      <div class="layout-toggle">
+        <span id="labelCount" class="count"></span>
+        <label for="layoutSelect" style="margin:0;">Layout</label>
+        <select id="layoutSelect">
+          <option value="sheet-wrap">Multiple per row</option>
+          <option value="sheet-1">One per row</option>
+        </select>
+        <button class="btn secondary" id="printBtn">Print labels</button>
+      </div>
+    </div>
+
+    <p class="note">Built to match the "5.2 Outer Carton Label" field layout (rotated text, PO Number / Style Ref / Description / Colour / Size / Supplier / Box X of Y / Carton Unit Qty). Two things I couldn't confirm from the spec: the title swaps to "MIXED CARTON OUTER LABEL" when Mixed carton is ticked (my best guess — flag if there's an exact wording), and Customer isn't printed on the label since it isn't in the original template — it's still captured in the table above for your own records.</p>
+  </div>
+
+  <div id="labelSheet" class="sheet-wrap"></div>
+  <p class="empty no-print" id="emptyMsg">No labels yet — fill in the order lines above and click "Generate labels".</p>
+
+</div>
+
+<script>
+  const rowsBody = document.getElementById('rowsBody');
+  const labelSheet = document.getElementById('labelSheet');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const labelCountEl = document.getElementById('labelCount');
+  const layoutSelect = document.getElementById('layoutSelect');
+
+  function makeRow(data){
+    data = data || {};
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="in-po" value="${data.po||''}" placeholder="uses default"></td>
+      <td><input type="text" class="in-customer" value="${data.customer||''}" placeholder="uses default"></td>
+      <td><input type="text" class="in-styleref" value="${data.styleref||''}" placeholder="Style ref"></td>
+      <td><input type="text" class="in-desc" value="${data.desc||''}" placeholder="Description"></td>
+      <td><input type="text" class="in-colour" value="${data.colour||''}" placeholder="Colour"></td>
+      <td><input type="text" class="in-size" value="${data.size||''}" placeholder="Size"></td>
+      <td><input type="text" class="in-supplier" value="${data.supplier||''}" placeholder="Supplier"></td>
+      <td><input type="number" class="in-cartonunitqty" value="${data.cartonunitqty||''}" min="0"></td>
+      <td><input type="number" class="in-cartons" value="${data.cartons||1}" min="1"></td>
+      <td class="col-mixed"><input type="checkbox" class="in-mixed" ${data.mixed ? 'checked' : ''}></td>
+      <td class="col-del"><button class="del-btn" title="Remove line">&times;</button></td>
+    `;
+    tr.querySelector('.del-btn').addEventListener('click', () => tr.remove());
+    rowsBody.appendChild(tr);
+  }
+
+  document.getElementById('addRowBtn').addEventListener('click', () => makeRow());
+
+  function truthy(v){
+    if(!v) return false;
+    v = v.trim().toLowerCase();
+    return v === 'y' || v === 'yes' || v === 'true' || v === '1';
+  }
+
+  document.getElementById('pasteBtn').addEventListener('click', () => {
+    const area = document.getElementById('pasteArea');
+    const lines = area.value.split('\n').map(l => l.trim()).filter(Boolean);
+    lines.forEach(line => {
+      const parts = line.split('\t');
+      if(parts.length < 2) return;
+      makeRow({
+        po: parts[0]||'',
+        customer: parts[1]||'',
+        styleref: parts[2]||'',
+        desc: parts[3]||'',
+        colour: parts[4]||'',
+        size: parts[5]||'',
+        supplier: parts[6]||'',
+        cartonunitqty: parts[7]||'',
+        cartons: parts[8]||1,
+        mixed: truthy(parts[9]||'')
+      });
+    });
+    area.value = '';
+  });
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  function strip(cls, text){
+    return `<div class="strip ${cls}"><span class="vtext">${text}</span></div>`;
+  }
+  function fieldPair(labelText, value){
+    return strip('strip-label', escapeHtml(labelText)) + strip('strip-value', escapeHtml(value || '\u2014'));
+  }
+
+  function generateLabels(){
+    const defaultPO = document.getElementById('defaultPO').value.trim();
+    const defaultCustomer = document.getElementById('defaultCustomer').value.trim();
+    labelSheet.innerHTML = '';
+    let total = 0;
+
+    rowsBody.querySelectorAll('tr').forEach(tr => {
+      const po = tr.querySelector('.in-po').value.trim() || defaultPO;
+      const styleref = tr.querySelector('.in-styleref').value.trim();
+      const desc = tr.querySelector('.in-desc').value.trim();
+      const colour = tr.querySelector('.in-colour').value.trim();
+      const size = tr.querySelector('.in-size').value.trim();
+      const supplier = tr.querySelector('.in-supplier').value.trim();
+      const cartonunitqty = tr.querySelector('.in-cartonunitqty').value.trim();
+      const cartons = parseInt(tr.querySelector('.in-cartons').value, 10) || 1;
+      const mixed = tr.querySelector('.in-mixed').checked;
+      if(!styleref) return;
+
+      const titleText = mixed ? 'MIXED CARTON OUTER LABEL' : 'SOLID COLOUR/SIZE OUTER LABEL';
+
+      for(let i = 1; i <= cartons; i++){
+        total++;
+        const outer = document.createElement('div');
+        outer.className = 'label-outer';
+        outer.innerHTML = `
+          ${mixed ? '<div class="mixed-badge">Mixed</div>' : ''}
+          <div class="label-inner">
+            ${strip('strip-title', escapeHtml(titleText))}
+            ${strip('strip-blank', '')}
+            ${fieldPair('PO NUMBER', po)}
+            ${fieldPair('STYLE REF', styleref)}
+            ${fieldPair('DESCRIPTION', desc)}
+            ${fieldPair('COLOUR', colour)}
+            ${fieldPair('SIZE', size)}
+            ${fieldPair('SUPPLIER', supplier)}
+            ${fieldPair('BOX', i + ' OF ' + cartons)}
+            ${strip('strip-qtylabel', 'CARTON UNIT QTY')}
+            ${strip('strip-qtyvalue', escapeHtml(cartonunitqty || '\u2014'))}
+          </div>
+        `;
+        labelSheet.appendChild(outer);
+      }
+    });
+
+    emptyMsg.style.display = total === 0 ? 'block' : 'none';
+    labelCountEl.textContent = total ? `${total} label${total===1?'':'s'} ready` : '';
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', generateLabels);
+  document.getElementById('printBtn').addEventListener('click', () => { generateLabels(); window.print(); });
+  layoutSelect.addEventListener('change', () => { labelSheet.className = layoutSelect.value; });
+
+  makeRow({});
+</script>
+</body>
+</html>
