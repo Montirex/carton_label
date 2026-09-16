@@ -5,7 +5,6 @@
 <title>Carton Label Generator</title>
 <style>
   :root{
-    --ink:#000;
     --paper:#fafaf8;
     --line:#d8d6cf;
     --accent:#2f5d4f;
@@ -15,17 +14,8 @@
     --flag-soft:#f6e8e6;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
-    background:var(--paper);
-    color:#1c1c1a;
-  }
-  .app{
-    max-width:1220px;
-    margin:0 auto;
-    padding:28px 24px 80px;
-  }
+  body{margin:0;font-family:-apple-system,"Segoe UI",Arial,sans-serif;background:var(--paper);color:#1c1c1a;}
+  .app{max-width:1220px;margin:0 auto;padding:28px 24px 80px;}
   h1{font-size:22px;margin:0 0 2px;letter-spacing:-0.01em;}
   .sub{color:var(--muted);font-size:13.5px;margin:0 0 22px;}
   .panel{border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:18px;background:#fff;}
@@ -33,15 +23,15 @@
   .panel h2 .n{background:var(--accent);color:#fff;width:19px;height:19px;border-radius:50%;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
   .row-inline{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;}
   label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
-  input[type=text], input[type=number]{font-family:inherit;font-size:13.5px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;width:100%;background:#fff;}
+  input[type=text],input[type=number]{font-family:inherit;font-size:13.5px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;width:100%;background:#fff;}
   .field-sm{width:180px;}
   .table-wrap{overflow-x:auto;margin-top:10px;}
-  table{width:100%;min-width:1240px;border-collapse:collapse;font-size:12.5px;}
-  th{text-align:left;font-weight:600;font-size:11px;color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
-  td{padding:5px 5px;vertical-align:middle;}
-  td input[type=text], td input[type=number]{padding:6px 7px;font-size:12.5px;}
-  th,td{width:9.5%;}
-  .col-mixed{width:8%;text-align:center;}
+  table.rows-table{width:100%;min-width:1400px;border-collapse:collapse;font-size:12.5px;}
+  table.rows-table th{text-align:left;font-weight:600;font-size:11px;color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  table.rows-table td{padding:5px 5px;vertical-align:middle;}
+  table.rows-table td input[type=text],table.rows-table td input[type=number]{padding:6px 7px;font-size:12.5px;}
+  .col-mixed{width:70px;text-align:center;}
+  .col-breakdown{width:220px;}
   .col-del{width:32px;text-align:center;}
   td.col-mixed{text-align:center;}
   input[type=checkbox]{width:16px;height:16px;cursor:pointer;}
@@ -49,7 +39,7 @@
   .del-btn:hover{color:var(--flag);}
   .add-row{margin-top:10px;font-size:12.5px;background:none;border:1px dashed var(--line);border-radius:6px;padding:7px 12px;cursor:pointer;color:var(--accent);}
   .add-row:hover{background:var(--accent-soft);}
-  textarea{width:100%;min-height:70px;font-family:ui-monospace, Menlo, Consolas, monospace;font-size:12px;padding:9px;border:1px solid var(--line);border-radius:6px;resize:vertical;}
+  textarea{width:100%;min-height:70px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding:9px;border:1px solid var(--line);border-radius:6px;resize:vertical;}
   .paste-row{display:flex;gap:10px;align-items:flex-start;margin-top:10px;}
   .paste-row textarea{flex:1;}
   .btn{font-family:inherit;font-size:13px;font-weight:600;padding:8px 16px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;white-space:nowrap;}
@@ -62,43 +52,31 @@
   .hint{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
   .note{font-size:11.5px;color:var(--muted);background:var(--accent-soft);border-radius:6px;padding:8px 10px;margin-bottom:18px;line-height:1.5;}
 
-  /* ---- label sheet ---- */
-  #labelSheet{display:flex;flex-wrap:wrap;gap:20px;overflow-x:auto;padding-bottom:10px;}
-  #labelSheet.sheet-1 .label-outer{width:100%;}
+  #labelSheet{display:flex;flex-wrap:wrap;gap:20px;padding-bottom:10px;}
+  #labelSheet.sheet-1 .label-outer{width:100%;max-width:640px;}
 
-  .label-outer{border:1px solid #000;padding:10px;background:#fff;flex:none;}
-  .label-inner{border:2.4px solid #000;display:flex;flex-direction:row;height:330px;}
+  .label-outer{border:1px solid #000;padding:12px;background:#fff;flex:none;width:520px;position:relative;}
+  .label-inner{border:2.4px solid #000;padding:14px;display:flex;flex-direction:column;gap:9px;}
 
-  .vtext{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;}
+  .box{border:1.4px solid #000;}
+  .row-title{padding:9px;text-align:center;font-weight:700;font-size:13.5px;letter-spacing:0.02em;}
+  .row-po{padding:8px 10px;font-weight:700;font-size:12.5px;display:flex;gap:6px;}
+  .row-po .val{font-weight:400;}
+  .row-mixed{padding:12px;text-align:center;font-weight:800;font-size:23px;letter-spacing:0.02em;}
 
-  .strip{border:1.2px solid #000;display:flex;align-items:center;justify-content:center;padding:5px 2px;overflow:hidden;}
-  .strip + .strip{border-left:none;}
+  .row-main{display:flex;gap:12px;}
+  .fields-table{flex:1;border-collapse:collapse;}
+  .fields-table td{border:1.4px solid #000;padding:6px 9px;font-size:12px;}
+  .fields-table td.k{font-weight:700;width:34%;background:#fafafa;}
+  .fields-table td.boxof{text-align:center;font-weight:700;letter-spacing:0.03em;}
 
-  .strip-title{flex:0 0 28px;}
-  .strip-title .vtext{font-size:10px;font-weight:700;letter-spacing:0.03em;}
+  .qty-block{width:170px;display:flex;flex-direction:column;gap:8px;}
+  .qty-label{padding:5px 8px;font-weight:700;font-size:11px;text-align:center;}
+  .qty-value{flex:1;padding:10px;display:flex;flex-direction:column;justify-content:center;gap:3px;}
+  .qty-value .big{font-weight:800;font-size:22px;text-align:center;}
+  .qty-value .line{font-weight:700;font-size:13px;text-transform:uppercase;}
 
-  .strip-blank{flex:0 0 18px;}
-
-  .strip-label{flex:0 0 17px;background:#fafafa;}
-  .strip-label .vtext{font-size:8.5px;font-weight:600;letter-spacing:0.02em;color:#333;}
-
-  .strip-value{flex:0 0 32px;}
-  .strip-value .vtext{font-size:12px;font-weight:700;}
-
-  .strip-qtylabel{flex:0 0 20px;background:#fafafa;}
-  .strip-qtylabel .vtext{font-size:8.5px;font-weight:700;letter-spacing:0.02em;}
-
-  .strip-qtyvalue{flex:0 0 62px;border-width:2.4px;}
-  .strip-qtyvalue .vtext{font-size:24px;font-weight:800;}
-
-  .mixed-badge{
-    position:absolute;top:6px;right:6px;
-    background:var(--flag-soft);color:var(--flag);
-    font-size:9px;font-weight:800;letter-spacing:0.03em;
-    padding:2px 5px;border-radius:3px;border:1px solid var(--flag);
-    text-transform:uppercase;
-  }
-  .label-outer{position:relative;}
+  .mixed-flag{position:absolute;top:6px;right:6px;background:var(--flag-soft);color:var(--flag);font-size:9px;font-weight:800;letter-spacing:0.03em;padding:2px 5px;border-radius:3px;border:1px solid var(--flag);text-transform:uppercase;}
 
   .empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 0;border:1px dashed var(--line);border-radius:8px;}
 
@@ -117,7 +95,7 @@
 
   <div class="no-print">
     <h1>Carton Label Generator</h1>
-    <p class="sub">Interim tool for carton labelling — matches the outer carton label field set (5.2), auto-filled per carton.</p>
+    <p class="sub">Interim tool for carton labelling — matches the outer carton label field set (5.2), including the mixed-sizes variant.</p>
 
     <div class="panel">
       <h2><span class="n">1</span>Order defaults</h2>
@@ -136,7 +114,7 @@
     <div class="panel">
       <h2><span class="n">2</span>Order lines</h2>
       <div class="table-wrap">
-      <table>
+      <table class="rows-table">
         <thead>
           <tr>
             <th>PO Number</th>
@@ -148,7 +126,8 @@
             <th>Supplier</th>
             <th>Carton Unit Qty</th>
             <th>No. of Cartons</th>
-            <th class="col-mixed">Mixed carton</th>
+            <th class="col-mixed">Mixed sizes</th>
+            <th class="col-breakdown">Size breakdown (if mixed)</th>
             <th class="col-del"></th>
           </tr>
         </thead>
@@ -158,10 +137,10 @@
       <button class="add-row" id="addRowBtn">+ Add line</button>
 
       <div class="paste-row">
-        <textarea id="pasteArea" placeholder="Or paste rows copied from Excel/NetSuite here — tab-separated: PO Number  Customer  Style Ref  Description  Colour  Size  Supplier  Carton Unit Qty  No. of Cartons  Mixed carton (Y/N)"></textarea>
+        <textarea id="pasteArea" placeholder="Or paste rows copied from Excel/NetSuite here — tab-separated: PO Number  Customer  Style Ref  Description  Colour  Size  Supplier  Carton Unit Qty  No. of Cartons  Mixed sizes (Y/N)  Size breakdown"></textarea>
         <button class="btn secondary" id="pasteBtn">Add pasted rows</button>
       </div>
-      <p class="hint">Each line = one Style Ref / Colour / Size on the order. "Carton Unit Qty" is the units in each carton, "No. of Cartons" is how many cartons that line fills — the tool prints that many labels automatically (Box 1 of 4 … 4 of 4).</p>
+      <p class="hint">For a mixed-size carton: tick "Mixed sizes", leave Size blank, and type the breakdown as e.g. <code>20 x Small, 30 x Medium, 40 x Large</code> — Carton Unit Qty isn't needed for these rows since the breakdown covers it.</p>
     </div>
 
     <div class="actions">
@@ -177,7 +156,7 @@
       </div>
     </div>
 
-    <p class="note">Built to match the "5.2 Outer Carton Label" field layout (rotated text, PO Number / Style Ref / Description / Colour / Size / Supplier / Box X of Y / Carton Unit Qty). Two things I couldn't confirm from the spec: the title swaps to "MIXED CARTON OUTER LABEL" when Mixed carton is ticked (my best guess — flag if there's an exact wording), and Customer isn't printed on the label since it isn't in the original template — it's still captured in the table above for your own records.</p>
+    <p class="note">Matches the "5.2 Outer Carton Label" layout: title, PO Number, Style Ref / Description / Colour / Size / Supplier table, Box X of Y, and Carton Unit Qty. For mixed-size cartons, a "MIXED SIZES" banner is added and the qty box lists the size breakdown instead of a single number, per your example.</p>
   </div>
 
   <div id="labelSheet" class="sheet-wrap"></div>
@@ -206,6 +185,7 @@
       <td><input type="number" class="in-cartonunitqty" value="${data.cartonunitqty||''}" min="0"></td>
       <td><input type="number" class="in-cartons" value="${data.cartons||1}" min="1"></td>
       <td class="col-mixed"><input type="checkbox" class="in-mixed" ${data.mixed ? 'checked' : ''}></td>
+      <td class="col-breakdown"><input type="text" class="in-breakdown" value="${data.breakdown||''}" placeholder="20 x Small, 30 x Medium"></td>
       <td class="col-del"><button class="del-btn" title="Remove line">&times;</button></td>
     `;
     tr.querySelector('.del-btn').addEventListener('click', () => tr.remove());
@@ -236,7 +216,8 @@
         supplier: parts[6]||'',
         cartonunitqty: parts[7]||'',
         cartons: parts[8]||1,
-        mixed: truthy(parts[9]||'')
+        mixed: truthy(parts[9]||''),
+        breakdown: parts[10]||''
       });
     });
     area.value = '';
@@ -244,13 +225,6 @@
 
   function escapeHtml(s){
     return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  }
-
-  function strip(cls, text){
-    return `<div class="strip ${cls}"><span class="vtext">${text}</span></div>`;
-  }
-  function fieldPair(labelText, value){
-    return strip('strip-label', escapeHtml(labelText)) + strip('strip-value', escapeHtml(value || '\u2014'));
   }
 
   function generateLabels(){
@@ -269,28 +243,45 @@
       const cartonunitqty = tr.querySelector('.in-cartonunitqty').value.trim();
       const cartons = parseInt(tr.querySelector('.in-cartons').value, 10) || 1;
       const mixed = tr.querySelector('.in-mixed').checked;
+      const breakdown = tr.querySelector('.in-breakdown').value.trim();
       if(!styleref) return;
 
-      const titleText = mixed ? 'MIXED CARTON OUTER LABEL' : 'SOLID COLOUR/SIZE OUTER LABEL';
+      const breakdownLines = mixed && breakdown
+        ? breakdown.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean)
+        : [];
 
       for(let i = 1; i <= cartons; i++){
         total++;
         const outer = document.createElement('div');
         outer.className = 'label-outer';
+
+        let qtyValueHtml;
+        if(mixed && breakdownLines.length){
+          qtyValueHtml = breakdownLines.map(l => `<div class="line">${escapeHtml(l)}</div>`).join('');
+        } else {
+          qtyValueHtml = `<div class="big">${escapeHtml(cartonunitqty || '\u2014')}</div>`;
+        }
+
         outer.innerHTML = `
-          ${mixed ? '<div class="mixed-badge">Mixed</div>' : ''}
+          ${mixed ? '<div class="mixed-flag">Mixed sizes</div>' : ''}
           <div class="label-inner">
-            ${strip('strip-title', escapeHtml(titleText))}
-            ${strip('strip-blank', '')}
-            ${fieldPair('PO NUMBER', po)}
-            ${fieldPair('STYLE REF', styleref)}
-            ${fieldPair('DESCRIPTION', desc)}
-            ${fieldPair('COLOUR', colour)}
-            ${fieldPair('SIZE', size)}
-            ${fieldPair('SUPPLIER', supplier)}
-            ${fieldPair('BOX', i + ' OF ' + cartons)}
-            ${strip('strip-qtylabel', 'CARTON UNIT QTY')}
-            ${strip('strip-qtyvalue', escapeHtml(cartonunitqty || '\u2014'))}
+            <div class="box row-title">SOLID COLOUR/SIZE OUTER LABEL</div>
+            <div class="box row-po"><span>PO NUMBER:</span><span class="val">${escapeHtml(po)}</span></div>
+            ${mixed ? '<div class="box row-mixed">MIXED SIZES</div>' : ''}
+            <div class="row-main">
+              <table class="fields-table">
+                <tr><td class="k">STYLE REF</td><td>${escapeHtml(styleref)}</td></tr>
+                <tr><td class="k">DESCRIPTION</td><td>${escapeHtml(desc)}</td></tr>
+                <tr><td class="k">COLOUR</td><td>${escapeHtml(colour)}</td></tr>
+                <tr><td class="k">SIZE</td><td>${mixed ? '' : escapeHtml(size)}</td></tr>
+                <tr><td class="k">SUPPLIER</td><td>${escapeHtml(supplier)}</td></tr>
+                <tr><td class="boxof" colspan="2">BOX ${i} OF ${cartons}</td></tr>
+              </table>
+              <div class="qty-block">
+                <div class="box qty-label">CARTON UNIT QTY</div>
+                <div class="box qty-value">${qtyValueHtml}</div>
+              </div>
+            </div>
           </div>
         `;
         labelSheet.appendChild(outer);
