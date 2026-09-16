@@ -140,7 +140,7 @@
         <textarea id="pasteArea" placeholder="Or paste rows copied from Excel/NetSuite here — tab-separated: PO Number  Customer  Style Ref  Description  Colour  Size  Supplier  Carton Unit Qty  No. of Cartons  Mixed sizes (Y/N)  Size breakdown"></textarea>
         <button class="btn secondary" id="pasteBtn">Add pasted rows</button>
       </div>
-      <p class="hint">For a mixed-size carton: tick "Mixed sizes", leave Size blank, and type the breakdown as e.g. <code>20 x Small, 30 x Medium, 40 x Large</code> — Carton Unit Qty isn't needed for these rows since the breakdown covers it.</p>
+      <p class="hint">For a mixed-size carton: tick "Mixed sizes", leave Size blank, and type the breakdown as e.g. <code>20 x Small, 30 x Medium</code>. If each carton on this line has a <strong>different</strong> mix, separate them with <code>|</code> — e.g. <code>10 x XS, 15 x S | 20 x M, 15 x L, 5 x XL</code> makes carton 1 show the first mix and carton 2 show the second, and "No. of Cartons" is worked out from how many you listed. If they're all the <strong>same</strong> mix, skip the <code>|</code> and just set "No. of Cartons" as normal.</p>
     </div>
 
     <div class="actions">
@@ -185,7 +185,7 @@
       <td><input type="number" class="in-cartonunitqty" value="${data.cartonunitqty||''}" min="0"></td>
       <td><input type="number" class="in-cartons" value="${data.cartons||1}" min="1"></td>
       <td class="col-mixed"><input type="checkbox" class="in-mixed" ${data.mixed ? 'checked' : ''}></td>
-      <td class="col-breakdown"><input type="text" class="in-breakdown" value="${data.breakdown||''}" placeholder="20 x Small, 30 x Medium"></td>
+      <td class="col-breakdown"><input type="text" class="in-breakdown" value="${data.breakdown||''}" placeholder="10 x XS, 15 x S | 20 x M, 15 x L, 5 x XL"></td>
       <td class="col-del"><button class="del-btn" title="Remove line">&times;</button></td>
     `;
     tr.querySelector('.del-btn').addEventListener('click', () => tr.remove());
@@ -246,18 +246,27 @@
       const breakdown = tr.querySelector('.in-breakdown').value.trim();
       if(!styleref) return;
 
-      const breakdownLines = mixed && breakdown
+      let explicitGroups = [];
+      if(mixed && breakdown && breakdown.includes('|')){
+        explicitGroups = breakdown.split('|')
+          .map(g => g.trim()).filter(Boolean)
+          .map(g => g.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean));
+      }
+      const uniformLines = (mixed && breakdown && !explicitGroups.length)
         ? breakdown.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean)
         : [];
+      const cartonsCount = explicitGroups.length ? explicitGroups.length : cartons;
 
-      for(let i = 1; i <= cartons; i++){
+      for(let i = 1; i <= cartonsCount; i++){
         total++;
         const outer = document.createElement('div');
         outer.className = 'label-outer';
 
+        const linesForThisCarton = explicitGroups.length ? explicitGroups[i - 1] : uniformLines;
+
         let qtyValueHtml;
-        if(mixed && breakdownLines.length){
-          qtyValueHtml = breakdownLines.map(l => `<div class="line">${escapeHtml(l)}</div>`).join('');
+        if(mixed && linesForThisCarton.length){
+          qtyValueHtml = linesForThisCarton.map(l => `<div class="line">${escapeHtml(l)}</div>`).join('');
         } else {
           qtyValueHtml = `<div class="big">${escapeHtml(cartonunitqty || '\u2014')}</div>`;
         }
@@ -275,7 +284,7 @@
                 <tr><td class="k">COLOUR</td><td>${escapeHtml(colour)}</td></tr>
                 <tr><td class="k">SIZE</td><td>${mixed ? '' : escapeHtml(size)}</td></tr>
                 <tr><td class="k">SUPPLIER</td><td>${escapeHtml(supplier)}</td></tr>
-                <tr><td class="boxof" colspan="2">BOX ${i} OF ${cartons}</td></tr>
+                <tr><td class="boxof" colspan="2">BOX ${i} OF ${cartonsCount}</td></tr>
               </table>
               <div class="qty-block">
                 <div class="box qty-label">CARTON UNIT QTY</div>
